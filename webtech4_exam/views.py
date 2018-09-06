@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
+import redis
 
 r_db = redis.StrictRedis(host='localhost', port=6379, db=0)
 
