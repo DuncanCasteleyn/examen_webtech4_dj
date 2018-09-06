@@ -20,10 +20,14 @@ def index(request):
     return HttpResponse(output)
 
 
+@csrf_exempt
 def post(request):
     movie_name = request.GET.get('movie')
     actors = request.GET.get('actors')
-    if movie_name == None or actors == None:
+    if movie_name is None:
+        movie_name = request.POST.get('movie')
+        actors = request.POST.get('actors')
+    if movie_name is None or actors is None:
         return HttpResponseBadRequest('<body>'
                                       '<h1>Missing parameter(s)!</h1>'
                                       '<p>Requires request parameter \'movie\' and \'actors\''
