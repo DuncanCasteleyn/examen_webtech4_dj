@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.shortcuts import render
 import redis
+from django.views.decorators.csrf import csrf_exempt
 
 r_db = redis.StrictRedis(host='localhost', port=6379, db=0)
 
@@ -24,9 +25,9 @@ def post(request):
     actors = request.GET.get('actors')
     if movie_name == None or actors == None:
         return HttpResponseBadRequest('<body>'
-                            '<h1>Missing parameter(s)!</h1>'
-                            '<p>Requires request parameter \'movie\' and \'actors\''
-                            '</body>', )
+                                      '<h1>Missing parameter(s)!</h1>'
+                                      '<p>Requires request parameter \'movie\' and \'actors\''
+                                      '</body>', )
     r_db.hset('movies', movie_name, actors)
     return HttpResponse('<body><h1>added!</h1></body>')
 
@@ -39,3 +40,20 @@ def init(request):
     r_db.hset('movies', 'Casablanca', 'Ingrid Bergman, Humphrey Bogart, Peter Lorre')
     r_db.hset('movies', 'The Big Lebowski', 'Julianne Moore, Jeff Bridges, Tara Reid')
     return HttpResponse('<body><h1>Default values added!</h1></body>')
+
+
+@csrf_exempt
+def search(request):
+    if request.method == 'POST':
+        movie = request.POST.get("movie")
+        movie_actors = r_db.hget('movies', movie)
+        if not movie_actors:
+            return HttpResponseNotFound('<body><p>Movie not known</p</body>')
+        return HttpResponse('<body>'
+                            '<p>'
+                            'movie: ' + movie + '<br />'
+                                                'actors: ' + movie_actors +
+                            '</p>'
+                            '</body>')
+    else:
+        return HttpResponseBadRequest('POST REQUEST EXPECTED')
